@@ -1,0 +1,47 @@
+# Go Development Rules for Cursor AI
+
+## Code Style
+- Follow Go conventions and idioms
+- Use gofmt and goimports for formatting
+- Keep functions small and focused
+- Use meaningful variable and function names
+- Add comments for exported functions and types
+
+## Error Handling
+- Always handle errors explicitly
+- Use descriptive error messages
+- Wrap errors with context when appropriate
+- Don't ignore errors silently
+
+## Testing
+- Write unit tests for all public functions
+- Use table-driven tests when appropriate
+- Follow naming convention: TestFunctionName
+- Include both positive and negative test cases
+- Aim for high test coverage
+
+## Performance
+- Prefer composition over inheritance
+- Use interfaces for abstraction
+- Avoid premature optimization
+- Profile before optimizing
+- Use appropriate data structures
+
+## Security
+- Validate all inputs
+- Use context.Context for timeouts and cancellation
+- Avoid SQL injection with prepared statements
+- Handle sensitive data carefully
+- Log security events appropriately
+
+## Dependencies
+- Minimize external dependencies
+- Use Go modules for dependency management
+- Keep dependencies up to date
+- Prefer standard library when possible
+
+## Documentation
+- Document all exported functions and types
+- Include usage examples in comments
+- Keep README.md updated
+- Use godoc conventions

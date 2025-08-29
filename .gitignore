@@ -1,0 +1,157 @@
+# Go .gitignore for Cursor AI Development
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Build artifacts
+/bin/
+/pkg/
+/dist/
+build/
+target/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Cursor AI specific (DON'T IGNORE THESE)
+# .cursorrules should be committed
+# .cursor/ directory contains user-specific settings
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.cover
+*.coverprofile
+
+# nyc test coverage
+.nyc_output
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Config files with sensitive data
+config.json
+secrets.yaml
+credentials.json
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Air (live reload tool)
+.air.toml
+tmp/
+
+# Docker
+docker-compose.override.yml
+
+# Cache directories
+.cache/
+node_modules/
+
+# Test cache
+.testcache/
+
+# Profiling data
+*.prof
+cpu.prof
+mem.prof
+profile.out
+
+# Migration files (sometimes sensitive)
+# migrations/*.sql
+
+# Generated code
+*.pb.go
+*_gen.go
+# Unless you want to commit generated code
+
+# Documentation build artifacts
+/docs/build/
+
+# Local development certificates
+*.pem
+*.key
+*.crt
+
+# Local development tools
+.tool-versions
+
+# JetBrains IDEs
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json  
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
