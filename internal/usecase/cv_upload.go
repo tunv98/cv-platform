@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"cv-platform/internal/domain"
 	logger "cv-platform/internal/log"
 	"cv-platform/internal/port"
@@ -8,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 type CVUploadUC struct {
@@ -35,7 +35,10 @@ type StartUploadResult struct {
 	ExpiredAt time.Time
 }
 
-func (uc *CVUploadUC) StartUpload(cmd StartUploadCmd) (*StartUploadResult, error) {
+func (uc *CVUploadUC) StartUpload(ctx context.Context, cmd StartUploadCmd) (*StartUploadResult, error) {
+	log := logger.SimpleFromContext(ctx)
+	log.Infof("starting upload process: file=%s, type=%s", cmd.FileName, cmd.MimeType)
+
 	id := uuid.New().String()
 	var ext string
 	if dot := lastDot(cmd.FileName); dot != -1 {
@@ -43,7 +46,7 @@ func (uc *CVUploadUC) StartUpload(cmd StartUploadCmd) (*StartUploadResult, error
 	}
 
 	objectKey := fmt.Sprintf("cv/%s.%s", id, ext)
-	logger.L().Info("generating signed url", zap.String("id", id), zap.String("object_key", objectKey), zap.String("mime_type", cmd.MimeType))
+	log.Infof("generating signed url: id=%s, key=%s, ext=%s", id, objectKey, ext)
 
 	opts := port.SignedURLOptions{
 		Method:      "PUT",
@@ -53,7 +56,7 @@ func (uc *CVUploadUC) StartUpload(cmd StartUploadCmd) (*StartUploadResult, error
 
 	url, err := uc.storage.SignedURL(objectKey, opts)
 	if err != nil {
-		logger.L().Error("failed to get signed url", zap.Error(err))
+		log.Errorf("failed to get signed url for id %s: %v", id, err)
 		return nil, err
 	}
 
@@ -68,8 +71,10 @@ func (uc *CVUploadUC) StartUpload(cmd StartUploadCmd) (*StartUploadResult, error
 		UpdatedAt: time.Now(),
 	}
 
+	log.Infof("saving cv to repository: id=%s, status=%s", id, cv.Status)
+
 	if err := uc.repo.Create(cv); err != nil {
-		logger.L().Error("failed to create cv", zap.Error(err))
+		log.Errorf("failed to create cv for id %s: %v", id, err)
 		return nil, err
 	}
 
@@ -80,7 +85,7 @@ func (uc *CVUploadUC) StartUpload(cmd StartUploadCmd) (*StartUploadResult, error
 		ExpiredAt: opts.ExpiredAt,
 	}
 
-	logger.L().Info("upload initialized", zap.String("id", id), zap.String("object_key", objectKey), zap.Time("expires_at", res.ExpiredAt))
+	log.Infof("upload initialized successfully: id=%s, expires_at=%v", id, res.ExpiredAt)
 	return res, nil
 }
 
@@ -88,33 +93,43 @@ type CompleteUploadCmd struct {
 	ID string
 }
 
-func (uc *CVUploadUC) CompleteUpload(cmd CompleteUploadCmd) (*domain.CV, error) {
-	logger.L().Info("completing upload", zap.String("id", cmd.ID))
+func (uc *CVUploadUC) CompleteUpload(ctx context.Context, cmd CompleteUploadCmd) (*domain.CV, error) {
+	log := logger.SimpleFromContext(ctx)
+	log.Infof("completing upload process for id: %s", cmd.ID)
+
 	cv, err := uc.repo.FindByID(cmd.ID)
 	if err != nil {
-		logger.L().Error("failed to find cv", zap.Error(err))
+		log.Errorf("failed to find cv for id %s: %v", cmd.ID, err)
 		return nil, err
 	}
+
+	log.Infof("checking object in storage: path=%s", cv.GCSPath)
+
 	ok, size, ctype, err := uc.storage.Head(cv.GCSPath)
 	if err != nil {
-		logger.L().Error("failed to head cv", zap.Error(err))
+		log.Errorf("failed to head cv for id %s at path %s: %v", cmd.ID, cv.GCSPath, err)
 		return nil, err
 	}
 	if !ok {
-		logger.L().Error("object not found", zap.String("object_key", cv.GCSPath))
+		log.Errorf("object not found in storage: id=%s, path=%s", cmd.ID, cv.GCSPath)
 		return nil, fmt.Errorf("object not found: %s", cv.GCSPath)
 	}
+
+	log.Infof("updating cv with file information: id=%s, size=%d, type=%s", cmd.ID, size, ctype)
+
 	cv.Size = size
 	if ctype != "" {
 		cv.MimeType = ctype
 	}
 	cv.Status = domain.CVStatusUploaded
 	cv.UpdatedAt = time.Now()
+
 	if err := uc.repo.Update(cv); err != nil {
-		logger.L().Error("failed to update cv", zap.Error(err))
+		log.Errorf("failed to update cv for id %s: %v", cmd.ID, err)
 		return nil, fmt.Errorf("failed to update cv: %w", err)
 	}
-	logger.L().Info("upload completed", zap.String("id", cmd.ID))
+
+	log.Infof("upload completed successfully: id=%s, status=%s, size=%d", cmd.ID, cv.Status, cv.Size)
 	return cv, nil
 }
 

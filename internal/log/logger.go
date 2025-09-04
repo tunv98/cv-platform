@@ -89,3 +89,58 @@ func argsToFields(args ...any) []zap.Field {
 	}
 	return fields
 }
+
+// Simple logging helpers for convenience
+type SimpleLogger struct {
+	logger *zap.Logger
+}
+
+// Info logs a message at info level
+func (s *SimpleLogger) Info(msg string) {
+	s.logger.Info(msg)
+}
+
+// Infof logs a formatted message at info level
+func (s *SimpleLogger) Infof(template string, args ...interface{}) {
+	s.logger.Sugar().Infof(template, args...)
+}
+
+// Warn logs a message at warn level
+func (s *SimpleLogger) Warn(msg string) {
+	s.logger.Warn(msg)
+}
+
+// Warnf logs a formatted message at warn level
+func (s *SimpleLogger) Warnf(template string, args ...interface{}) {
+	s.logger.Sugar().Warnf(template, args...)
+}
+
+// Error logs a message at error level
+func (s *SimpleLogger) Error(msg string) {
+	s.logger.Error(msg)
+}
+
+// Errorf logs a formatted message at error level
+func (s *SimpleLogger) Errorf(template string, args ...interface{}) {
+	s.logger.Sugar().Errorf(template, args...)
+}
+
+// Debug logs a message at debug level
+func (s *SimpleLogger) Debug(msg string) {
+	s.logger.Debug(msg)
+}
+
+// Debugf logs a formatted message at debug level
+func (s *SimpleLogger) Debugf(template string, args ...interface{}) {
+	s.logger.Sugar().Debugf(template, args...)
+}
+
+// Simple returns a simple logger wrapper for the global logger
+func Simple() *SimpleLogger {
+	return &SimpleLogger{logger: zap.L()}
+}
+
+// SimpleFromContext returns a simple logger wrapper from context
+func SimpleFromContext(ctx context.Context) *SimpleLogger {
+	return &SimpleLogger{logger: FromContext(ctx)}
+}

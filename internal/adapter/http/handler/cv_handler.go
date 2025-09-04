@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"cv-platform/internal/adapter/http/middleware"
 	"cv-platform/internal/adapter/response"
 	"cv-platform/internal/usecase"
 	"net/http"
@@ -30,17 +31,25 @@ type startResp struct {
 }
 
 func (h *CVHandler) StartUpload(c *gin.Context) {
+	log := middleware.SimpleLoggerFromContext(c)
+
+	log.Info("starting upload request")
+
 	var req startReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Warnf("validation failed: %v", err)
 		response.RespondValidationErr(c, err.Error())
 		return
 	}
 
-	res, err := h.uc.StartUpload(usecase.StartUploadCmd{
+	log.Infof("processing upload request: file=%s, type=%s", req.FileName, req.MimeType)
+
+	res, err := h.uc.StartUpload(c.Request.Context(), usecase.StartUploadCmd{
 		FileName: req.FileName,
 		MimeType: req.MimeType,
 	})
 	if err != nil {
+		log.Errorf("failed to start upload for file %s: %v", req.FileName, err)
 		response.RespondInternalErr(c, err.Error())
 		return
 	}
@@ -51,6 +60,8 @@ func (h *CVHandler) StartUpload(c *gin.Context) {
 		SignedURL: res.SignedURL,
 		ExpiredAt: res.ExpiredAt,
 	}
+
+	log.Infof("upload started successfully: id=%s, expires_at=%v", res.ID, res.ExpiredAt)
 
 	response.RespondSuccess(c, http.StatusOK, resp)
 }
@@ -64,9 +75,14 @@ type completeResp struct {
 }
 
 func (h *CVHandler) CompleteUpload(c *gin.Context) {
+	log := middleware.SimpleLoggerFromContext(c)
 	id := c.Param("id")
-	cv, err := h.uc.CompleteUpload(usecase.CompleteUploadCmd{ID: id})
+
+	log.Infof("completing upload request for id: %s", id)
+
+	cv, err := h.uc.CompleteUpload(c.Request.Context(), usecase.CompleteUploadCmd{ID: id})
 	if err != nil {
+		log.Errorf("failed to complete upload for id %s: %v", id, err)
 		response.RespondBadRequest(c, err.Error())
 		return
 	}
@@ -78,6 +94,8 @@ func (h *CVHandler) CompleteUpload(c *gin.Context) {
 		MimeType: cv.MimeType,
 		GCSPath:  cv.GCSPath,
 	}
+
+	log.Infof("upload completed successfully: id=%s, status=%s, size=%d", cv.ID, cv.Status, cv.Size)
 
 	response.RespondSuccess(c, http.StatusOK, resp)
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"cv-platform/internal/adapter/http/middleware"
 	"cv-platform/internal/adapter/response"
 	"cv-platform/internal/usecase"
 	"net/http"
@@ -30,16 +31,25 @@ type profileResp struct {
 }
 
 func (h *ProfileHandler) GetProfile(c *gin.Context) {
+	// Option 1: Use simple logger (recommended for simple cases)
+	log := middleware.SimpleLoggerFromContext(c)
+
+	log.Info("getting profile request")
+
 	var req profileReq
 	if err := c.ShouldBindUri(&req); err != nil {
+		log.Warnf("validation failed: %v", err)
 		response.RespondValidationErr(c, err.Error())
 		return
 	}
 
-	res, err := h.uc.GetProfile(usecase.GetProfileCmd{
+	log.Infof("processing get profile request for phone: %s", req.Phone)
+
+	res, err := h.uc.GetProfile(c.Request.Context(), usecase.GetProfileCmd{
 		Phone: req.Phone,
 	})
 	if err != nil {
+		log.Errorf("failed to get profile for phone %s: %v", req.Phone, err)
 		response.RespondInternalErr(c, err.Error())
 		return
 	}
@@ -51,5 +61,8 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 		Email:     res.Email,
 		Phone:     res.Phone,
 	}
+
+	log.Infof("profile retrieved successfully: id=%s, phone=%s", res.ID, res.Phone)
+
 	response.RespondSuccess(c, http.StatusOK, resp)
 }

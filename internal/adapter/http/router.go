@@ -2,13 +2,19 @@ package http
 
 import (
 	"cv-platform/internal/adapter/http/handler"
+	"cv-platform/internal/adapter/http/middleware"
 	"cv-platform/internal/usecase"
 
 	"github.com/gin-gonic/gin"
 )
 
 func NewRouter(cvUC *usecase.CVUploadUC, profileUC *usecase.ProfileStoreUC) *gin.Engine {
-	router := gin.Default()
+	router := gin.New()
+
+	// Add middleware
+	router.Use(gin.Recovery())
+	router.Use(middleware.RequestLogging())
+
 	api := router.Group("/api/v1")
 	cvApi := api.Group("/cvs")
 	{
