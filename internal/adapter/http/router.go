@@ -7,12 +7,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(uc *usecase.CVUploadUC) *gin.Engine {
+func NewRouter(cvUC *usecase.CVUploadUC, profileUC *usecase.ProfileStoreUC) *gin.Engine {
 	router := gin.Default()
 	api := router.Group("/api/v1")
+	cvApi := api.Group("/cvs")
 	{
-		api.POST("/cvs/upload", handler.NewCVHandler(uc).StartUpload)
-		api.PUT("/cvs/:id", handler.NewCVHandler(uc).CompleteUpload)
+		cvApi.POST("/upload", handler.NewCVHandler(cvUC).StartUpload)
+		cvApi.PUT("/:id", handler.NewCVHandler(cvUC).CompleteUpload)
+	}
+	profileApi := api.Group("/profiles")
+	{
+		profileApi.GET("/:id", handler.NewProfileHandler(profileUC).GetProfile)
 	}
 	return router
 }

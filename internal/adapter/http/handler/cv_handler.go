@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"cv-platform/internal/adapter/response"
 	"cv-platform/internal/usecase"
 	"net/http"
 	"time"
@@ -31,7 +32,7 @@ type startResp struct {
 func (h *CVHandler) StartUpload(c *gin.Context) {
 	var req startReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.RespondValidationErr(c, err.Error())
 		return
 	}
 
@@ -40,23 +41,43 @@ func (h *CVHandler) StartUpload(c *gin.Context) {
 		MimeType: req.MimeType,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.RespondInternalErr(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, startResp{
-		ID: res.ID,
-	})
+	resp := startResp{
+		ID:        res.ID,
+		ObjectKey: res.ObjectKey,
+		SignedURL: res.SignedURL,
+		ExpiredAt: res.ExpiredAt,
+	}
+
+	response.RespondSuccess(c, http.StatusOK, resp)
+}
+
+type completeResp struct {
+	ID       string `json:"id"`
+	Status   string `json:"status"`
+	Size     int64  `json:"size"`
+	MimeType string `json:"mime_type"`
+	GCSPath  string `json:"gcs_path"`
 }
 
 func (h *CVHandler) CompleteUpload(c *gin.Context) {
 	id := c.Param("id")
 	cv, err := h.uc.CompleteUpload(usecase.CompleteUploadCmd{ID: id})
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.RespondBadRequest(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"id": cv.ID, "status": cv.Status, "size": cv.Size, "mime": cv.MimeType, "gcs_path": cv.GCSPath,
-	})
+
+	resp := completeResp{
+		ID:       cv.ID,
+		Status:   string(cv.Status),
+		Size:     cv.Size,
+		MimeType: cv.MimeType,
+		GCSPath:  cv.GCSPath,
+	}
+
+	response.RespondSuccess(c, http.StatusOK, resp)
 }

@@ -1,9 +1,6 @@
 package main
 
 import (
-	"context"
-
-	"cv-platform/internal/adapter/gcp"
 	"cv-platform/internal/adapter/http"
 	"cv-platform/internal/config"
 	logger "cv-platform/internal/log"
@@ -18,20 +15,22 @@ func main() {
 		logger.L().Fatal("failed to load config", zap.Error(err))
 	}
 
-	ctx := context.Background()
-	storage, err := gcp.NewGCSStorage(ctx, cfg.BucketName, cfg.CredsJSON)
-	if err != nil {
-		logger.L().Fatal("failed to create gcs storage", zap.Error(err))
-	}
+	// ctx := context.Background()
+	// storage, err := gcp.NewGCSStorage(ctx, cfg.BucketName, cfg.CredsJSON)
+	// if err != nil {
+	// 	logger.L().Fatal("failed to create gcs storage", zap.Error(err))
+	// }
 
-	repo, err := gcp.NewFirestoreCVRepo(ctx, cfg.ProjectID, cfg.CredsJSON)
-	if err != nil {
-		logger.L().Fatal("failed to create firestore cv repo", zap.Error(err))
-	}
+	// repo, err := gcp.NewFirestoreCVRepo(ctx, cfg.ProjectID, cfg.CredsJSON)
+	// if err != nil {
+	// 	logger.L().Fatal("failed to create firestore cv repo", zap.Error(err))
+	// }
 
-	uc := usecase.NewCVUploadUC(storage, repo)
+	// cvUploadUC := usecase.NewCVUploadUC(storage, repo)
+	var cvUploadUC *usecase.CVUploadUC
+	profileStoreUC := usecase.NewProfileStoreUC()
 
-	r := http.NewRouter(uc)
+	r := http.NewRouter(cvUploadUC, profileStoreUC)
 	if err := r.Run(":" + cfg.Port); err != nil {
 		logger.L().Fatal("failed to run server", zap.Error(err))
 	}
