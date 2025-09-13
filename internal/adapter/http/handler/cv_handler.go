@@ -3,6 +3,7 @@ package handler
 import (
 	"cv-platform/internal/adapter/http/middleware"
 	"cv-platform/internal/adapter/response"
+	"cv-platform/internal/metrics"
 	"cv-platform/internal/usecase"
 	"net/http"
 	"time"
@@ -31,13 +32,15 @@ type startResp struct {
 }
 
 func (h *CVHandler) StartUpload(c *gin.Context) {
-	log := middleware.SimpleLoggerFromContext(c)
+	start := time.Now()
+	log := middleware.LoggerFromContext(c)
 
 	log.Info("starting upload request")
 
 	var req startReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Warnf("validation failed: %v", err)
+		metrics.RecordCVUpload("start", "validation_error", time.Since(start).Seconds())
 		response.RespondValidationErr(c, err.Error())
 		return
 	}
@@ -50,6 +53,7 @@ func (h *CVHandler) StartUpload(c *gin.Context) {
 	})
 	if err != nil {
 		log.Errorf("failed to start upload for file %s: %v", req.FileName, err)
+		metrics.RecordCVUpload("start", "error", time.Since(start).Seconds())
 		response.RespondInternalErr(c, err.Error())
 		return
 	}
@@ -62,6 +66,7 @@ func (h *CVHandler) StartUpload(c *gin.Context) {
 	}
 
 	log.Infof("upload started successfully: id=%s, expires_at=%v", res.ID, res.ExpiredAt)
+	metrics.RecordCVUpload("start", "success", time.Since(start).Seconds())
 
 	response.RespondSuccess(c, http.StatusOK, resp)
 }
@@ -75,7 +80,8 @@ type completeResp struct {
 }
 
 func (h *CVHandler) CompleteUpload(c *gin.Context) {
-	log := middleware.SimpleLoggerFromContext(c)
+	start := time.Now()
+	log := middleware.LoggerFromContext(c)
 	id := c.Param("id")
 
 	log.Infof("completing upload request for id: %s", id)
@@ -83,6 +89,7 @@ func (h *CVHandler) CompleteUpload(c *gin.Context) {
 	cv, err := h.uc.CompleteUpload(c.Request.Context(), usecase.CompleteUploadCmd{ID: id})
 	if err != nil {
 		log.Errorf("failed to complete upload for id %s: %v", id, err)
+		metrics.RecordCVUpload("complete", "error", time.Since(start).Seconds())
 		response.RespondBadRequest(c, err.Error())
 		return
 	}
@@ -96,6 +103,7 @@ func (h *CVHandler) CompleteUpload(c *gin.Context) {
 	}
 
 	log.Infof("upload completed successfully: id=%s, status=%s, size=%d", cv.ID, cv.Status, cv.Size)
+	metrics.RecordCVUpload("complete", "success", time.Since(start).Seconds())
 
 	response.RespondSuccess(c, http.StatusOK, resp)
 }

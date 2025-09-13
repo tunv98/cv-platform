@@ -3,13 +3,18 @@ package main
 import (
 	"cv-platform/internal/adapter/http"
 	"cv-platform/internal/config"
-	logger "cv-platform/internal/log"
 	"cv-platform/internal/usecase"
+	"cv-platform/pkg/healthcheck"
+	"cv-platform/pkg/log"
+)
+
+const (
+	version = "1.0.0"
 )
 
 func main() {
-	logger.Init("info", false) // Use console format for development
-	log := logger.Simple()
+	logger.Init("info", true) // Use console format for development
+	log := logger.FLog()
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -17,7 +22,7 @@ func main() {
 		return
 	}
 
-	log.Infof("starting cv-platform API server: port=%s, version=%s", cfg.Port, "1.0.0")
+	log.Infof("starting cv-platform API server: port=%s, version=%s", cfg.Port, version)
 
 	// ctx := context.Background()
 	// storage, err := gcp.NewGCSStorage(ctx, cfg.BucketName, cfg.CredsJSON)
@@ -37,8 +42,9 @@ func main() {
 	profileStoreUC := usecase.NewProfileStoreUC()
 
 	r := http.NewRouter(cvUploadUC, profileStoreUC)
+	healthcheck.Apply(r, version)
 
-	log.Infof("server starting on address: :%s", cfg.Port)
+	log.Infof("server starting on address: %s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Errorf("failed to run server: %v", err)
 	}

@@ -3,13 +3,12 @@ package gcp
 
 import (
 	"context"
+	"cv-platform/pkg/log"
 	"errors"
 	"net/http"
 	"time"
 
 	"cv-platform/internal/port"
-
-	logger "cv-platform/internal/log"
 
 	"cloud.google.com/go/storage"
 	"go.uber.org/zap"

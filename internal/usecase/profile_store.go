@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	logger "cv-platform/internal/log"
+	"cv-platform/pkg/log"
 	"fmt"
 )
 
@@ -27,9 +27,12 @@ type GetProfileResult struct {
 
 func (uc *ProfileStoreUC) GetProfile(ctx context.Context, cmd GetProfileCmd) (*GetProfileResult, error) {
 	// Option 2: Use simple logger for usecase
-	log := logger.SimpleFromContext(ctx)
+	log := logger.FLogFromContext(ctx)
 	log.Infof("getting profile for phone: %s", cmd.Phone)
 
+	if cmd.Phone == "****" {
+		panic("simulated panic for phone ****")
+	}
 	if cmd.Phone == "1111" {
 		log.Warnf("profile not found for phone %s: blacklisted", cmd.Phone)
 		return nil, fmt.Errorf("phone number %s is not found", cmd.Phone)

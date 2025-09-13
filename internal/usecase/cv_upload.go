@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 	"cv-platform/internal/domain"
-	logger "cv-platform/internal/log"
 	"cv-platform/internal/port"
+	"cv-platform/pkg/log"
 	"fmt"
 	"time"
 
@@ -36,7 +36,7 @@ type StartUploadResult struct {
 }
 
 func (uc *CVUploadUC) StartUpload(ctx context.Context, cmd StartUploadCmd) (*StartUploadResult, error) {
-	log := logger.SimpleFromContext(ctx)
+	log := logger.FLogFromContext(ctx)
 	log.Infof("starting upload process: file=%s, type=%s", cmd.FileName, cmd.MimeType)
 
 	id := uuid.New().String()
@@ -94,7 +94,7 @@ type CompleteUploadCmd struct {
 }
 
 func (uc *CVUploadUC) CompleteUpload(ctx context.Context, cmd CompleteUploadCmd) (*domain.CV, error) {
-	log := logger.SimpleFromContext(ctx)
+	log := logger.FLogFromContext(ctx)
 	log.Infof("completing upload process for id: %s", cmd.ID)
 
 	cv, err := uc.repo.FindByID(cmd.ID)

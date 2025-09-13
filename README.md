@@ -143,7 +143,7 @@ curl -s -X POST ${API_BASE:-http://localhost:8080}/api/v1/cvs/<id>/complete
 - `internal/usecase/cv_upload.go`: StartUpload/CompleteUpload use cases
 - `internal/adapter/http`: HTTP transport (router, handlers)
 - `internal/config/config.go`: Viper config loader with .env support
-- `internal/log/logger.go`: Zap logger initialization and helpers
+- `pkg/log/logger.go`: Zap logger initialization and helpers
 - `web/app`: Next.js App Router pages, including `/upload`
 
 ## Linting & Testing

@@ -1,18 +1,17 @@
 package middleware
 
 import (
-	logger "cv-platform/internal/log"
+	logger "cv-platform/pkg/log"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 // RequestIDKey is the key used to store request ID in context
 const RequestIDKey = "request_id"
 
-// RequestLogging middleware adds request ID and structured logging to each request
+// RequestLogging middleware adds request ID and simple logging to each request
 func RequestLogging() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -21,37 +20,33 @@ func RequestLogging() gin.HandlerFunc {
 		requestID := uuid.New().String()
 		c.Set(RequestIDKey, requestID)
 
-		// Create request-scoped logger with request ID
+		// Create request-scoped log with request ID
 		reqLogger := logger.With("request_id", requestID)
 
-		// Store logger in context for handlers to use
+		// Store log in context for handlers to use
 		ctx := logger.IntoContext(c.Request.Context(), reqLogger)
 		c.Request = c.Request.WithContext(ctx)
 
+		// Create simple log for easier logging
+		log := logger.FLogFromContext(ctx)
+
 		// Log incoming request
-		reqLogger.Info("incoming request",
-			zap.String("method", c.Request.Method),
-			zap.String("path", c.Request.URL.Path),
-			zap.String("query", c.Request.URL.RawQuery),
-			zap.String("user_agent", c.Request.UserAgent()),
-			zap.String("remote_addr", c.ClientIP()),
-		)
+		query := c.Request.URL.RawQuery
+		log.Infof("incoming request: %s %s?%s from %s",
+			c.Request.Method, c.Request.URL.Path, query, c.ClientIP())
 
 		// Process request
 		c.Next()
 
 		// Log response
 		duration := time.Since(start)
-		reqLogger.Info("request completed",
-			zap.Int("status", c.Writer.Status()),
-			zap.Duration("duration", duration),
-			zap.Int("response_size", c.Writer.Size()),
-		)
+		log.Infof("request completed: status=%d, duration=%v, size=%d",
+			c.Writer.Status(), duration, c.Writer.Size())
 
 		// Log errors if any
 		if len(c.Errors) > 0 {
 			for _, err := range c.Errors {
-				reqLogger.Error("request error", zap.Error(err.Err))
+				log.Errorf("request error: %v", err.Err)
 			}
 		}
 	}
@@ -67,12 +62,7 @@ func GetRequestID(c *gin.Context) string {
 	return ""
 }
 
-// LoggerFromContext retrieves the request-scoped logger from gin context
-func LoggerFromContext(c *gin.Context) *zap.Logger {
-	return logger.FromContext(c.Request.Context())
-}
-
-// SimpleLoggerFromContext retrieves the request-scoped simple logger from gin context
-func SimpleLoggerFromContext(c *gin.Context) *logger.SimpleLogger {
-	return logger.SimpleFromContext(c.Request.Context())
+// LoggerFromContext retrieves the request-scoped log from gin context
+func LoggerFromContext(c *gin.Context) *logger.FLogger {
+	return logger.FLogFromContext(c.Request.Context())
 }

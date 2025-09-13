@@ -3,6 +3,7 @@ package handler
 import (
 	"cv-platform/internal/adapter/http/middleware"
 	"cv-platform/internal/adapter/response"
+	"cv-platform/internal/metrics"
 	"cv-platform/internal/usecase"
 	"net/http"
 
@@ -32,13 +33,14 @@ type profileResp struct {
 
 func (h *ProfileHandler) GetProfile(c *gin.Context) {
 	// Option 1: Use simple logger (recommended for simple cases)
-	log := middleware.SimpleLoggerFromContext(c)
+	log := middleware.LoggerFromContext(c)
 
 	log.Info("getting profile request")
 
 	var req profileReq
 	if err := c.ShouldBindUri(&req); err != nil {
 		log.Warnf("validation failed: %v", err)
+		metrics.RecordProfileRequest("get", "validation_error")
 		response.RespondValidationErr(c, err.Error())
 		return
 	}
@@ -50,6 +52,7 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 	})
 	if err != nil {
 		log.Errorf("failed to get profile for phone %s: %v", req.Phone, err)
+		metrics.RecordProfileRequest("get", "error")
 		response.RespondInternalErr(c, err.Error())
 		return
 	}
@@ -63,6 +66,7 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 	}
 
 	log.Infof("profile retrieved successfully: id=%s, phone=%s", res.ID, res.Phone)
+	metrics.RecordProfileRequest("get", "success")
 
 	response.RespondSuccess(c, http.StatusOK, resp)
 }
