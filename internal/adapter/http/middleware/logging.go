@@ -12,8 +12,16 @@ import (
 const RequestIDKey = "request_id"
 
 // RequestLogging middleware adds request ID and simple logging to each request
-func RequestLogging() gin.HandlerFunc {
+func RequestLogging(skipPaths []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Skip logging for certain paths
+		for _, path := range skipPaths {
+			if c.Request.URL.Path == path {
+				c.Next()
+				return
+			}
+		}
+
 		start := time.Now()
 
 		// Generate unique request ID

@@ -23,16 +23,10 @@ func NewRouter(cvUC *usecase.CVUploadUC, profileUC *usecase.ProfileStoreUC) *gin
 		}
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}))
-
 	// Prometheus' metrics middleware
 	router.Use(middleware.PrometheusMiddleware())
-
 	// Logging middleware
-	router.Use(middleware.RequestLogging())
-	router.Use(gin.LoggerWithConfig(gin.LoggerConfig{
-		SkipPaths: []string{"/health", "/info", "/metrics"},
-	}))
-
+	router.Use(middleware.RequestLogging([]string{"/health", "/info", "/metrics"}))
 	cvHandler := handler.NewCVHandler(cvUC)
 	profileHandler := handler.NewProfileHandler(profileUC)
 

@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"cv-platform/pkg/log"
+	logger "cv-platform/pkg/log"
 	"fmt"
 )
 
@@ -26,7 +26,6 @@ type GetProfileResult struct {
 }
 
 func (uc *ProfileStoreUC) GetProfile(ctx context.Context, cmd GetProfileCmd) (*GetProfileResult, error) {
-	// Option 2: Use simple logger for usecase
 	log := logger.FLogFromContext(ctx)
 	log.Infof("getting profile for phone: %s", cmd.Phone)
 

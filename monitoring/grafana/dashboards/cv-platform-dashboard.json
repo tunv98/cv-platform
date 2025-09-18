@@ -107,7 +107,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(http_requests_total[5m])",
+          "expr": "sum by (method, path, status) (rate(http_requests_total{path!=\"/metrics\"}[5m]))",
           "instant": false,
           "legendFormat": "{{method}} {{path}} ({{status}})",
           "range": true,
@@ -653,6 +653,169 @@
       ],
       "title": "CV Upload Duration",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green" },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "id": 8,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "CPU usage % - {{instance}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [ { "color": "green" }, { "color": "red", "value": 90 } ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "id": 9,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100",
+          "legendFormat": "Memory usage % - {{instance}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Memory Usage (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "red", "value": 90 } ] },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+      "id": 10,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "(1 - (node_filesystem_free_bytes{mountpoint=\"/\", fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{mountpoint=\"/\", fstype!~\"tmpfs|overlay\"})) * 100",
+          "legendFormat": "Filesystem / usage % - {{instance}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Filesystem Usage (%) - /",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "Bps", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
+      "id": 11,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (device) (irate(node_disk_read_bytes_total[5m]))",
+          "legendFormat": "Read - {{device}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum by (device) (irate(node_disk_written_bytes_total[5m]))",
+          "legendFormat": "Write - {{device}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Disk Throughput (bytes/s)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 48 },
+      "id": 12,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [
+        { "editorMode": "code", "expr": "sum by (device) (irate(node_disk_reads_completed_total[5m]))", "legendFormat": "Reads - {{device}}", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "sum by (device) (irate(node_disk_writes_completed_total[5m]))", "legendFormat": "Writes - {{device}}", "range": true, "refId": "B" }
+      ],
+      "title": "Disk IOPS",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "Bps", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 48 },
+      "id": 13,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [
+        { "editorMode": "code", "expr": "sum by (device) (irate(node_network_receive_bytes_total{device!~\"lo\"}[5m]))", "legendFormat": "RX - {{device}}", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "sum by (device) (irate(node_network_transmit_bytes_total{device!~\"lo\"}[5m]))", "legendFormat": "TX - {{device}}", "range": true, "refId": "B" }
+      ],
+      "title": "Network Throughput (bytes/s)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 56 },
+      "id": 14,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [
+        { "editorMode": "code", "expr": "node_load1", "legendFormat": "load1 - {{instance}}", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "node_load5", "legendFormat": "load5 - {{instance}}", "range": true, "refId": "B" },
+        { "editorMode": "code", "expr": "node_load15", "legendFormat": "load15 - {{instance}}", "range": true, "refId": "C" }
+      ],
+      "title": "Load Average",
+      "type": "timeseries"
     }
   ],
   "refresh": "10s",
@@ -667,8 +830,8 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
-    "to": "now"
+    "from": "now-24h",
+    "to": "now+1h"
   },
   "timepicker": {},
   "timezone": "",
