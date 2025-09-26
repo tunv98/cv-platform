@@ -2,7 +2,7 @@
 
 A minimal, production-ready monorepo for a CV upload platform featuring:
 
-- Go backend with clean architecture, Google Cloud Storage (GCS) and Firestore adapters
+- Go backend with clean architecture, Google Cloud Storage (GCS) and Firestore infrastructure
 - Zap structured logging and Viper-based configuration with .env support
 - Next.js (App Router) frontend with a modern, accessible upload UI
 
@@ -22,8 +22,9 @@ Users upload CV files from the web UI. The backend issues a signed URL (PUT to o
 cv-platform/
   cmd/api/                    # Backend entrypoint
   internal/
+    infrastructure/
+      gcp/                    # GCP infrastructure (GCS, Firestore)
     adapter/
-      gcp/                    # GCP adapters (GCS, Firestore)
       http/                   # HTTP router & handlers
     config/                   # Viper-based configuration loader
     domain/                   # Core domain models
@@ -138,8 +139,8 @@ curl -s -X POST ${API_BASE:-http://localhost:8080}/api/v1/cvs/<id>/complete
 
 - `internal/domain`: Domain entities such as `CV` and status
 - `internal/port`: Interfaces for `BlobStorage` and `CVRepository`
-- `internal/adapter/gcp/gcs_storage.go`: GCS implementation (signed URLs, head)
-- `internal/adapter/gcp/firestore_repo.go`: Firestore `CVRepository`
+- `internal/infrastructure/gcp/gcs_storage.go`: GCS implementation (signed URLs, head)
+- `internal/infrastructure/gcp/firestore_repo.go`: Firestore `CVRepository`
 - `internal/usecase/cv_upload.go`: StartUpload/CompleteUpload use cases
 - `internal/adapter/http`: HTTP transport (router, handlers)
 - `internal/config/config.go`: Viper config loader with .env support

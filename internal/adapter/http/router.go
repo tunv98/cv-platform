@@ -4,7 +4,7 @@ import (
 	"cv-platform/internal/adapter/http/handler"
 	"cv-platform/internal/adapter/http/middleware"
 	"cv-platform/internal/usecase"
-	logger "cv-platform/pkg/log"
+	"cv-platform/pkg/logger"
 	"net/http"
 	"os"
 
@@ -39,6 +39,7 @@ func NewRouter(cvUC *usecase.CVUploadUC, profileUC *usecase.ProfileStoreUC) *gin
 	profileApi := api.Group("/profiles")
 	{
 		profileApi.GET("/:id", profileHandler.GetProfile)
+		profileApi.POST("", profileHandler.CreateProfile)
 	}
 
 	// Prometheus' metrics endpoint

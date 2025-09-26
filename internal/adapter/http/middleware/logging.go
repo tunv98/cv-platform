@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	logger "cv-platform/pkg/log"
+	logger "cv-platform/pkg/logger"
 	"time"
 
 	"github.com/gin-gonic/gin"

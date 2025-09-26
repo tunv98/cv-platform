@@ -20,8 +20,8 @@ func NewCVHandler(uc *usecase.CVUploadUC) *CVHandler {
 }
 
 type startReq struct {
-	FileName string `json:"file_name" biding:"required"`
-	MimeType string `json:"mime_type" biding:"required"`
+	FileName string `json:"file_name" binding:"required"`
+	MimeType string `json:"mime_type" binding:"required"`
 }
 
 type startResp struct {

@@ -2,10 +2,9 @@ package main
 
 import (
 	"cv-platform/internal/adapter/http"
-	"cv-platform/internal/config"
-	"cv-platform/internal/usecase"
+	"cv-platform/internal/config/dotenv"
 	"cv-platform/pkg/healthcheck"
-	"cv-platform/pkg/log"
+	"cv-platform/pkg/logger"
 )
 
 const (
@@ -16,30 +15,13 @@ func main() {
 	logger.Init("info", true) // Use console format for development
 	log := logger.FLog()
 
-	cfg, err := config.Load()
+	cfg, err := dotenv.Load()
 	if err != nil {
 		log.Errorf("failed to load config: %v", err)
 		return
 	}
 
 	log.Infof("starting cv-platform API server: port=%s, version=%s", cfg.Port, version)
-
-	// ctx := context.Background()
-	// storage, err := gcp.NewGCSStorage(ctx, cfg.BucketName, cfg.CredsJSON)
-	// if err != nil {
-	// 	log.Errorf("failed to create gcs storage: %v", err)
-	// 	return
-	// }
-
-	// repo, err := gcp.NewFirestoreCVRepo(ctx, cfg.ProjectID, cfg.CredsJSON)
-	// if err != nil {
-	// 	log.Errorf("failed to create firestore cv repo: %v", err)
-	// 	return
-	// }
-
-	// cvUploadUC := usecase.NewCVUploadUC(storage, repo)
-	var cvUploadUC *usecase.CVUploadUC
-	profileStoreUC := usecase.NewProfileStoreUC()
 
 	r := http.NewRouter(cvUploadUC, profileStoreUC)
 	healthcheck.Apply(r, version)

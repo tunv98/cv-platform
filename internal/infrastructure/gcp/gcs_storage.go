@@ -1,9 +1,9 @@
-// internal/adapter/gcp/gcs_storage.go
+// internal/infrastructure/gcp/gcs_storage.go
 package gcp
 
 import (
 	"context"
-	"cv-platform/pkg/log"
+	"cv-platform/pkg/logger"
 	"errors"
 	"net/http"
 	"time"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"cv-platform/internal/domain"
 	"cv-platform/internal/port"
-	"cv-platform/pkg/log"
+	"cv-platform/pkg/logger"
 	"fmt"
 	"time"
 

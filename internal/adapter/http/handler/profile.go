@@ -18,12 +18,12 @@ func NewProfileHandler(uc *usecase.ProfileStoreUC) *ProfileHandler {
 	return &ProfileHandler{uc: uc}
 }
 
-type profileReq struct {
+type getProfileReq struct {
 	Phone  string `uri:"id" binding:"required"`
 	Status bool   `query:"status" `
 }
 
-type profileResp struct {
+type getProfileResp struct {
 	ID        string `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
@@ -37,7 +37,7 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 
 	log.Info("getting profile request")
 
-	var req profileReq
+	var req getProfileReq
 	if err := c.ShouldBindUri(&req); err != nil {
 		log.Warnf("validation failed: %v", err)
 		metrics.RecordProfileRequest("get", "validation_error")
@@ -57,7 +57,7 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	resp := profileResp{
+	resp := getProfileResp{
 		ID:        res.ID,
 		FirstName: res.FirstName,
 		LastName:  res.LastName,
@@ -69,4 +69,55 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 	metrics.RecordProfileRequest("get", "success")
 
 	response.RespondSuccess(c, http.StatusOK, resp)
+}
+
+type createProfileReq struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email" binding:"required,email"`
+	Phone     string `json:"phone" binding:"required"`
+	Age       int    `json:"age" binding:"gte=15,lte=130"`
+	Gender    string `json:"gender" binding:"oneof=male female"`
+}
+
+type createProfileResp struct {
+	ID string `json:"id"`
+}
+
+func (h *ProfileHandler) CreateProfile(c *gin.Context) {
+	log := middleware.LoggerFromContext(c)
+
+	log.Info("creating profile request")
+
+	var req createProfileReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Warnf("validation failed: %v", err)
+		metrics.RecordProfileRequest("create", "validation_error")
+		response.RespondValidationErr(c, err.Error())
+		return
+	}
+
+	log.Infof("processing create profile request: first_name=%s, last_name=%s, email=%s, phone=%s, age=%d, gender=%s",
+		req.FirstName, req.LastName, req.Email, req.Phone, req.Age, req.Gender)
+
+	res, err := h.uc.CreateProfile(c.Request.Context(), usecase.CreateProfileCmd{
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+		Phone:     req.Phone,
+		Age:       req.Age,
+		Gender:    req.Gender,
+	})
+
+	if err != nil {
+		log.Errorf("failed to create profile: %v", err)
+		metrics.RecordProfileRequest("create", "error")
+		response.RespondInternalErr(c, err.Error())
+		return
+	}
+
+	log.Infof("profile created successfully: id=%s", res.ID)
+	metrics.RecordProfileRequest("create", "success")
+
+	response.RespondSuccess(c, http.StatusOK, createProfileResp{ID: res.ID})
 }

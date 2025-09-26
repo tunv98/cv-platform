@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	logger "cv-platform/pkg/log"
+	"cv-platform/pkg/logger"
 	"fmt"
 )
 
@@ -49,4 +49,25 @@ func (uc *ProfileStoreUC) GetProfile(ctx context.Context, cmd GetProfileCmd) (*G
 		result.ID, result.Phone, result.Email)
 
 	return result, nil
+}
+
+type CreateProfileCmd struct {
+	FirstName string
+	LastName  string
+	Email     string
+	Phone     string
+	Age       int
+	Gender    string
+}
+
+type CreateProfileResult struct {
+	ID string
+}
+
+func (uc *ProfileStoreUC) CreateProfile(ctx context.Context, cmd CreateProfileCmd) (*CreateProfileResult, error) {
+	log := logger.FLogFromContext(ctx)
+	log.Infof("creating profile: first_name=%s, last_name=%s, email=%s, phone=%s, age=%d, gender=%s",
+		cmd.FirstName, cmd.LastName, cmd.Email, cmd.Phone, cmd.Age, cmd.Gender)
+
+	return &CreateProfileResult{ID: "1"}, nil
 }
